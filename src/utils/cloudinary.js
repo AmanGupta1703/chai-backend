@@ -13,10 +13,17 @@ const getPublicIdFromUrl = (imageUrl) => {
 
     const url = new URL(imageUrl);
     const path = url?.pathname ?? "";
-    const filename = path?.split("/")?.pop() ?? "";
+
+    const parts = path?.split("/");
+    let resource_type = "";
+
+    if (parts.includes("video")) resource_type = "video";
+    else if (parts.includes("image")) resource_type = "image";
+
+    const filename = parts?.pop() ?? "";
     const publicId = filename?.split(".")?.[0] || null;
 
-    return publicId;
+    return { publicId, resource_type };
   } catch (error) {
     return null;
   }
@@ -43,14 +50,16 @@ const deleteImageFromCloudinary = async (imageUrl) => {
   try {
     if (!imageUrl) throw new Error("No image URL provided");
 
-    const publicId = getPublicIdFromUrl(imageUrl);
+    const { publicId, resource_type } = getPublicIdFromUrl(imageUrl);
 
     if (!publicId) {
       throw new Error("No image url provided");
     }
 
-    const response = await cloudinary.uploader.destroy(publicId);
-    console.log(response);
+    const response = await cloudinary.uploader.destroy(publicId, {
+      resource_type,
+    });
+    // console.log(response);
 
     if (response.result !== "ok") {
       throw new Error(
